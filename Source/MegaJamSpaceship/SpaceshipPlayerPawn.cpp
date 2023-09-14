@@ -3,7 +3,6 @@
 #include "SpaceshipPlayerPawn.h"
 #include "SpaceshipPlayerController.h"
 #include "Camera/CameraComponent.h"
-#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -14,16 +13,16 @@
 ASpaceshipPlayerPawn::ASpaceshipPlayerPawn()
 {
 	// init root sphere and set root
-	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
+	Collision = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Collision"));
 	// like setting parent in Unity
-	SetRootComponent(Sphere);
+	SetRootComponent(Collision);
 
 	Body = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Body"));
-	Body->SetupAttachment(Sphere);
+	Body->SetupAttachment(Collision);
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	SpringArm->SetupAttachment(Sphere);
-
+	SpringArm->SetupAttachment(Collision);
+	
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 

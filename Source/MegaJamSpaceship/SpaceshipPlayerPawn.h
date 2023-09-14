@@ -32,7 +32,7 @@ public:
 	
 	// Sphere to use for root component (everything rotate together) and collision
 	UPROPERTY(EditAnywhere)
-	class USphereComponent* Sphere;
+	class UStaticMeshComponent* Collision;
 
 	// Static mesh for the body of the spaceship, attached to root.
 	UPROPERTY(EditAnywhere)
