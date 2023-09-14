@@ -23,6 +23,12 @@ public:
 
 	// handle input to update location
 	void Move(const struct FInputActionValue& ActionValue);
+
+	// handle input to update rotation
+	void Rotate(const struct FInputActionValue& ActionValue);
+
+	// handle input to enable free flying
+	void ToggleFreeFly();
 	
 	// Sphere to use for root component (everything rotate together) and collision
 	UPROPERTY(EditAnywhere)
@@ -44,8 +50,15 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UFloatingPawnMovement* Movement;
 
-	// Scale to apply to location input (speed?)
+	// Scale to apply to location input (speed)
 	float MoveScale;
+
+	// Scale to apply to rotation input (mouse sensitivity)
+	float RotateScale;
+
+	// Whether to use free flying mode
+	UPROPERTY(EditAnywhere)
+	uint32 bFreeFly:1;
 	
 protected:
 	// Called when the game starts or when spawned
