@@ -7,7 +7,7 @@
 #include "SpaceshipPlayerController.generated.h"
 
 /**
- * 
+ *	Set up following this tutorial: https://www.youtube.com/watch?v=4wWIjlkSj2w
  */
 UCLASS()
 class MEGAJAMSPACESHIP_API ASpaceshipPlayerController : public APlayerController
@@ -28,4 +28,10 @@ public:
 
 	UPROPERTY()
 	class UInputAction* FreeFlyAction;
+
+	UPROPERTY()
+	class UInputAction* StartBoostAction;
+
+	UPROPERTY()
+	class UInputAction* StopBoostAction;
 };

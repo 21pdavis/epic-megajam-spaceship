@@ -13,7 +13,8 @@ public class MegaJamSpaceship : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"InputCore",
-			"EnhancedInput"
+			"EnhancedInput",
+			"UMG"
 		});
 		
 		PublicIncludePaths.AddRange(new string[]

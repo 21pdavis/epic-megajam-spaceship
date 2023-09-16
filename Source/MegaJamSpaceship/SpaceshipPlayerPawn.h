@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Blueprint/UserWidget.h"
 #include "SpaceshipPlayerPawn.generated.h"
 
 /**
@@ -29,6 +30,10 @@ public:
 
 	// handle input to enable free flying
 	void ToggleFreeFly();
+
+	// handle input/disable boost
+	void Boost();
+	void StopBoost();
 	
 	// Sphere to use for root component (everything rotate together) and collision
 	UPROPERTY(EditAnywhere)
@@ -50,17 +55,36 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UFloatingPawnMovement* Movement;
 
+	// Editable Fields
 	// Scale to apply to location input (speed)
+	UPROPERTY(EditAnywhere)
 	float MoveScale;
 
 	// Scale to apply to rotation input (mouse sensitivity)
+	UPROPERTY(EditAnywhere)
 	float RotateScale;
 
-	// Whether to use free flying mode
 	UPROPERTY(EditAnywhere)
-	uint32 bFreeFly:1;
+	float BoostMultiplier;
 	
+	UPROPERTY(EditAnywhere)
+	float SpringArmLength;
+
+	UPROPERTY(EditAnywhere)
+	float BoostZoomOut;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Widgets")
+	TSubclassOf<UUserWidget> HUDWidgetClass;
+
+	// Whether to use free flying mode
+	uint32 bFreeFly:1;
+
+	// Whether to use boost mode
+	uint32 bBoost:1;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
+	virtual void Tick(float DeltaTime) override;
 };

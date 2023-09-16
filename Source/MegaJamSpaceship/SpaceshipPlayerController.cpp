@@ -52,4 +52,10 @@ void ASpaceshipPlayerController::SetupInputComponent()
 
 	FreeFlyAction = NewObject<UInputAction>(this);
 	MapKey(PawnMappingContext, FreeFlyAction, EKeys::F);
+
+	StartBoostAction = NewObject<UInputAction>(this);
+	MapKey(PawnMappingContext, StartBoostAction, EKeys::LeftShift);
+
+	StopBoostAction = NewObject<UInputAction>(this);
+	MapKey(PawnMappingContext, StopBoostAction, EKeys::LeftShift);
 }

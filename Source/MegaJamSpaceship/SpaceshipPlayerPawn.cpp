@@ -30,14 +30,50 @@ ASpaceshipPlayerPawn::ASpaceshipPlayerPawn()
 
 	MoveScale = 1.0f;
 	RotateScale = 50.f;
+	BoostMultiplier = 3.f;
+	SpringArmLength = 600.f;
+	BoostZoomOut = 200.f;
 	bFreeFly = false;
+	bBoost = false;
+
+	SpringArm->TargetArmLength = SpringArmLength;
 }
 
 // Called when the game starts or when spawned
 void ASpaceshipPlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// Actually going to keep this conversation with GitHub Copilot in here because it's interesting
+	// q: what does this check do?
+	// a: it checks if the HUDWidgetClass is valid, if it is, it will create the widget and add it to the viewport
+	// q: what does valid mean in this context
+	// a: it means that the HUDWidgetClass is not null
+	// q: when is it null?
+	// a: when the HUDWidgetClass is not set in the editor
+	if (HUDWidgetClass)
+	{
+		// q: when would this be null?
+		// a: when the HUDWidgetClass is not a valid class
+		// but this is for the HUDWidget itself. We already checked if the HUDWidgetClass is valid
+		// a: it's null when the HUDWidgetClass is not set in the editor
+		// q: so why check again?
+		// a: because the HUDWidgetClass could be set to a class that is not a valid class
+		if (UUserWidget* HUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass))
+		{
+			HUDWidget->AddToViewport();
+		}
+	}
+}
+
+void ASpaceshipPlayerPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	// log current speed to console
+	UE_LOG(LogTemp, Warning, TEXT("Speed: %f"), GetVelocity().Size());
+	// log current move scale
+	UE_LOG(LogTemp, Warning, TEXT("MoveScale: %f"), MoveScale);
 }
 
 // Called to bind functionality to input
@@ -46,6 +82,7 @@ void ASpaceshipPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	// cast our inherited controller from Pawn to our custom SpaceshipPlayerController
 	ASpaceshipPlayerController* SpaceshipPlayerController = Cast<ASpaceshipPlayerController>(Controller);
 	
 	check(EnhancedInputComponent && SpaceshipPlayerController);
@@ -55,19 +92,24 @@ void ASpaceshipPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	EnhancedInputComponent->BindAction(SpaceshipPlayerController->RotateAction, ETriggerEvent::Triggered, this, &ASpaceshipPlayerPawn::Rotate);
 	// Started detects only on first press
 	EnhancedInputComponent->BindAction(SpaceshipPlayerController->FreeFlyAction, ETriggerEvent::Started, this, &ASpaceshipPlayerPawn::ToggleFreeFly);
+	// Seems like you should pair Started/Completed together and you need separate actions to avoid conflicting behavior
+	EnhancedInputComponent->BindAction(SpaceshipPlayerController->StartBoostAction, ETriggerEvent::Started, this, &ASpaceshipPlayerPawn::Boost);
+	EnhancedInputComponent->BindAction(SpaceshipPlayerController->StopBoostAction, ETriggerEvent::Completed, this, &ASpaceshipPlayerPawn::StopBoost);
 
 	ULocalPlayer* LocalPlayer = SpaceshipPlayerController->GetLocalPlayer();
 	check(LocalPlayer);
 	
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	check(Subsystem);
-	
+
 	Subsystem->ClearAllMappings();
 	Subsystem->AddMappingContext(SpaceshipPlayerController->PawnMappingContext, 0);
 }
 
 void ASpaceshipPlayerPawn::Move(const FInputActionValue& ActionValue)
 {
+	// log current move scale
+	UE_LOG(LogTemp, Warning, TEXT("MoveScale Actually Being Used: %f"), MoveScale);
 	FVector Input = ActionValue.Get<FInputActionValue::Axis3D>();
 	AddMovementInput(GetActorRotation().RotateVector(Input), MoveScale);
 }
@@ -87,7 +129,7 @@ void ASpaceshipPlayerPawn::Rotate(const FInputActionValue& ActionValue)
 	{
 		Input += GetActorRotation();
 		Input.Pitch = FMath::ClampAngle(Input.Pitch, -89.9f, 89.9f);
-		// TODO: see what removing this does, he mentioned something about the horizon changing
+		// question: see what removing this does, he mentioned something about the horizon changing
 		// answer: Gimbal lock happens and the horizon he was referring to was in relation to the ship's alignment
 		Input.Roll = 0;
 		SetActorRotation(Input);	
@@ -100,3 +142,30 @@ void ASpaceshipPlayerPawn::ToggleFreeFly()
 	bFreeFly = !bFreeFly;
 }
 
+void ASpaceshipPlayerPawn::Boost()
+{
+	// start of boost, zoom out camera
+	if (!bBoost)
+	{
+		bBoost = true;
+
+		Movement->Acceleration *= BoostMultiplier;
+		Movement->MaxSpeed *= BoostMultiplier;
+		// MoveScale *= BoostMultiplier;
+		SpringArm->TargetArmLength = SpringArmLength + BoostZoomOut;
+	}
+}
+
+void ASpaceshipPlayerPawn::StopBoost()
+{
+	// end of boost, zoom in camera
+	if (bBoost)
+	{
+		bBoost = false;
+
+		Movement->Acceleration /= BoostMultiplier;
+		Movement->MaxSpeed /= BoostMultiplier;
+		// MoveScale /= BoostMultiplier;
+		SpringArm->TargetArmLength = SpringArmLength;
+	}
+}
