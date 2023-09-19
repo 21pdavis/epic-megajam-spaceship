@@ -82,6 +82,9 @@ public:
 	// Whether to use boost mode
 	uint32 bBoost:1;
 
+	// Maximum offset of ship
+	uint32 MaximumShipOffset;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

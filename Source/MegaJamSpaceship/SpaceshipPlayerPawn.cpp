@@ -12,6 +12,8 @@
 // init various components in class
 ASpaceshipPlayerPawn::ASpaceshipPlayerPawn()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	
 	// init root sphere and set root
 	Collision = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Collision"));
 	// like setting parent in Unity
@@ -35,7 +37,8 @@ ASpaceshipPlayerPawn::ASpaceshipPlayerPawn()
 	BoostZoomOut = 200.f;
 	bFreeFly = false;
 	bBoost = false;
-
+	MaximumShipOffset = 500.f;
+	
 	SpringArm->TargetArmLength = SpringArmLength;
 }
 
@@ -70,10 +73,17 @@ void ASpaceshipPlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// log current speed to console
-	UE_LOG(LogTemp, Warning, TEXT("Speed: %f"), GetVelocity().Size());
-	// log current move scale
-	UE_LOG(LogTemp, Warning, TEXT("MoveScale: %f"), MoveScale);
+	FVector WorldSpaceVelocity = GetVelocity();
+	FVector LocalSpaceVelocity = GetActorTransform().InverseTransformVector(WorldSpaceVelocity);
+	if (LocalSpaceVelocity.Normalize())
+	{
+		float SwayDirection = -LocalSpaceVelocity.Y;
+		
+		if (FVector::Distance(Body->GetComponentLocation(), Collision->GetComponentLocation()) < MaximumShipOffset)
+		{
+			Body->AddLocalOffset(FVector(0, SwayDirection, 0));
+		}
+	}
 }
 
 // Called to bind functionality to input
