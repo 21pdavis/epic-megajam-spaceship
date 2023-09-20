@@ -37,7 +37,7 @@ ASpaceshipPlayerPawn::ASpaceshipPlayerPawn()
 	BoostZoomOut = 200.f;
 	bFreeFly = false;
 	bBoost = false;
-	MaximumShipOffset = 500.f;
+	MaximumShipOffset = 50.f;
 	
 	SpringArm->TargetArmLength = SpringArmLength;
 }
@@ -73,17 +73,47 @@ void ASpaceshipPlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	const FTransform RootTransform = Collision->GetComponentTransform();
+
 	FVector WorldSpaceVelocity = GetVelocity();
-	FVector LocalSpaceVelocity = GetActorTransform().InverseTransformVector(WorldSpaceVelocity);
-	if (LocalSpaceVelocity.Normalize())
-	{
-		float SwayDirection = -LocalSpaceVelocity.Y;
+	FVector LocalSpaceVelocity = RootTransform.InverseTransformVector(WorldSpaceVelocity);
+
+	const float Sway = -WorldSpaceVelocity.GetSafeNormal().Y * DeltaTime * 100.f;
+	
+	const FVector CenterToShip = RootTransform.InverseTransformVector(Body->GetComponentLocation() - Collision->GetComponentLocation());
+	const bool OnRight = CenterToShip.Y > 0;
+	UE_LOG(LogTemp, Warning, TEXT("OnRight: %d"), OnRight);
+	const bool MovingRight = LocalSpaceVelocity.Y > 0;
+	UE_LOG(LogTemp, Warning, TEXT("MovingRight: %d"), MovingRight);
+	const float ShipCenterDist = CenterToShip.Size();
 		
-		if (FVector::Distance(Body->GetComponentLocation(), Collision->GetComponentLocation()) < MaximumShipOffset)
-		{
-			Body->AddLocalOffset(FVector(0, SwayDirection, 0));
-		}
+	if (ShipCenterDist < MaximumShipOffset || (!OnRight && MovingRight) || (OnRight && !MovingRight))
+	{
+		// FVector TransformedSway = RootTransform.InverseTransformVector(FVector(0, Sway, 0));
+		Body->AddLocalOffset(FVector(0, Sway, 0));
 	}
+	
+	if (FMath::Abs(LocalSpaceVelocity.Y) > 100.f)
+	{
+		// const float Sway = -LocalSpaceVelocity.GetSafeNormal().Y;
+		// const FVector CenterToShip = Body->GetComponentLocation() - Collision->GetComponentLocation();
+		// const bool OnRight = CenterToShip.Y > 0;
+		// const float ShipCenterDist = CenterToShip.Size();
+		//
+		// if (ShipCenterDist < MaximumShipOffset)
+		// {
+		// 	Body->AddLocalOffset(FVector(0, Sway, 0));
+		// }
+	}
+	else // Pull ship back towards center
+	{
+		// const FVector PullDirection = RootTransform.TransformPosition(Collision->GetComponentLocation() - Body->GetComponentLocation());
+		// if (PullDirection.Size() > 1.f)
+		// {
+		// 	Body->AddLocalOffset(FVector(0, PullDirection.Y, 0) * 0.1f);
+		// }
+	}
+
 }
 
 // Called to bind functionality to input
