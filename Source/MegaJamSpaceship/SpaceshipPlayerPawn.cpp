@@ -83,14 +83,12 @@ void ASpaceshipPlayerPawn::Tick(float DeltaTime)
 	
 	const FVector CenterToShip = RootTransform.InverseTransformVector(Body->GetComponentLocation() - Collision->GetComponentLocation());
 	const bool OnRight = CenterToShip.Y > 0;
-	UE_LOG(LogTemp, Warning, TEXT("OnRight: %d"), OnRight);
 	const bool MovingRight = LocalSpaceVelocity.Y > 0;
-	UE_LOG(LogTemp, Warning, TEXT("MovingRight: %d"), MovingRight);
 	
 	const float ShipCenterDist = CenterToShip.Size();
-		
 	if (ShipCenterDist < MaximumShipOffset || (!OnRight && MovingRight) || (OnRight && !MovingRight))
 	{
+		// lesson learned the hard way: AddLocalOffset *already* adds the vector in the local space
 		Body->AddLocalOffset(FVector(0, Sway, 0));
 	}
 }
@@ -128,7 +126,6 @@ void ASpaceshipPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 void ASpaceshipPlayerPawn::Move(const FInputActionValue& ActionValue)
 {
 	// log current move scale
-	// UE_LOG(LogTemp, Warning, TEXT("MoveScale Actually Being Used: %f"), MoveScale);
 	FVector Input = ActionValue.Get<FInputActionValue::Axis3D>();
 	AddMovementInput(GetActorRotation().RotateVector(Input), MoveScale);
 }
@@ -136,7 +133,6 @@ void ASpaceshipPlayerPawn::Move(const FInputActionValue& ActionValue)
 void ASpaceshipPlayerPawn::Rotate(const FInputActionValue& ActionValue)
 {
 	FRotator Input(ActionValue[0], ActionValue[1], ActionValue[2]);
-	// input * Time.deltaTime * RotateScale in Unity
 	Input *= GetWorld()->GetDeltaSeconds() * RotateScale;
 
 	if (bFreeFly)
