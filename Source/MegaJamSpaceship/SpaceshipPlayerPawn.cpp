@@ -84,7 +84,7 @@ void ASpaceshipPlayerPawn::Tick(const float DeltaTime)
 	const FVector CenterToShip = RootTransform.InverseTransformVector(Body->GetComponentLocation() - Collision->GetComponentLocation());
 	const bool OnRight = CenterToShip.Y > 0;
 	const bool MovingRight = LocalSpaceVelocity.Y > 0;
-	
+
 	const float ShipCenterDist = CenterToShip.Size();
 	if (ShipCenterDist < MaximumShipOffset || (!OnRight && MovingRight) || (OnRight && !MovingRight))
 	{
@@ -92,7 +92,9 @@ void ASpaceshipPlayerPawn::Tick(const float DeltaTime)
 		Body->AddLocalOffset(FVector(0, Sway, 0));
 	}
 
-	if (FMath::Abs(LocalSpaceVelocity.Y) < 50.f && ShipCenterDist > 0.01f)
+	if (
+		(FMath::Abs(LocalSpaceVelocity.Y) < 50.f || OnRight && !MovingRight || !OnRight && MovingRight)
+		&& ShipCenterDist > 0.01f)
 	{
 		// TODO: parameterize centering speed
 		FVector CenteringMovement = CenterToShip * DeltaTime * 1.f;
