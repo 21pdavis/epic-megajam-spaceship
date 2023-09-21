@@ -38,7 +38,7 @@ ASpaceshipPlayerPawn::ASpaceshipPlayerPawn()
 	BoostZoomOut = 200.f;
 	bFreeFly = false;
 	bBoost = false;
-	MaximumShipOffset = 50.f;
+	MaximumShipOffset = 100.f;
 	
 	SpringArm->TargetArmLength = SpringArmLength;
 }
@@ -79,7 +79,7 @@ void ASpaceshipPlayerPawn::Tick(const float DeltaTime)
 	const FVector WorldSpaceVelocity = GetVelocity();
 	const FVector LocalSpaceVelocity = RootTransform.InverseTransformVector(WorldSpaceVelocity);
 
-	const float Sway = -LocalSpaceVelocity.GetSafeNormal().Y * DeltaTime * 100.f;
+	const float Sway = -LocalSpaceVelocity.GetSafeNormal().Y * DeltaTime * LocalSpaceVelocity.Size() / 25.f;
 	
 	const FVector CenterToShip = RootTransform.InverseTransformVector(Body->GetComponentLocation() - Collision->GetComponentLocation());
 	const bool OnRight = CenterToShip.Y > 0;
@@ -91,6 +91,24 @@ void ASpaceshipPlayerPawn::Tick(const float DeltaTime)
 		// lesson learned the hard way: AddLocalOffset *already* adds the vector in the local space
 		Body->AddLocalOffset(FVector(0, Sway, 0));
 	}
+
+	if (FMath::Abs(LocalSpaceVelocity.Y) < 50.f && ShipCenterDist > 0.01f)
+	{
+		// TODO: parameterize centering speed
+		FVector CenteringMovement = CenterToShip * DeltaTime * 1.f;
+
+        // have ship gradually float back to center when not moving left or right
+        if (CenteringMovement.Size() > ShipCenterDist)
+        {
+        	CenteringMovement = CenterToShip;
+        }
+        
+        // DrawDebugLine(GetWorld(), Body->GetComponentLocation(), Body->GetComponentLocation() + CenteringMovement, FColor::Red, true, 0.1f, 0, 1.f);
+        Body->AddLocalOffset(FVector(0, CenteringMovement.Y, 0));
+	}
+
+	// Draw debug sphere at the collision's transform
+	// DrawDebugSphere(GetWorld(), Collision->GetComponentLocation(), 50.f, 12, FColor::Red, false, 5.f, 0, 1.f);
 }
 
 // Called to bind functionality to input
