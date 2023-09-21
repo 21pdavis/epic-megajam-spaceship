@@ -70,14 +70,14 @@ void ASpaceshipPlayerPawn::BeginPlay()
 	}
 }
 
-void ASpaceshipPlayerPawn::Tick(float DeltaTime)
+void ASpaceshipPlayerPawn::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	const FTransform RootTransform = Collision->GetComponentTransform();
 
-	FVector WorldSpaceVelocity = GetVelocity();
-	FVector LocalSpaceVelocity = RootTransform.InverseTransformVector(WorldSpaceVelocity);
+	const FVector WorldSpaceVelocity = GetVelocity();
+	const FVector LocalSpaceVelocity = RootTransform.InverseTransformVector(WorldSpaceVelocity);
 
 	const float Sway = -LocalSpaceVelocity.GetSafeNormal().Y * DeltaTime * 100.f;
 	
@@ -100,7 +100,7 @@ void ASpaceshipPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	// cast our inherited controller from Pawn to our custom SpaceshipPlayerController
-	ASpaceshipPlayerController* SpaceshipPlayerController = Cast<ASpaceshipPlayerController>(Controller);
+	const ASpaceshipPlayerController* SpaceshipPlayerController = Cast<ASpaceshipPlayerController>(Controller);
 	
 	check(EnhancedInputComponent && SpaceshipPlayerController);
 
@@ -113,7 +113,7 @@ void ASpaceshipPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	EnhancedInputComponent->BindAction(SpaceshipPlayerController->StartBoostAction, ETriggerEvent::Started, this, &ASpaceshipPlayerPawn::Boost);
 	EnhancedInputComponent->BindAction(SpaceshipPlayerController->StopBoostAction, ETriggerEvent::Completed, this, &ASpaceshipPlayerPawn::StopBoost);
 
-	ULocalPlayer* LocalPlayer = SpaceshipPlayerController->GetLocalPlayer();
+	const ULocalPlayer* LocalPlayer = SpaceshipPlayerController->GetLocalPlayer();
 	check(LocalPlayer);
 	
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
@@ -126,7 +126,7 @@ void ASpaceshipPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 void ASpaceshipPlayerPawn::Move(const FInputActionValue& ActionValue)
 {
 	// log current move scale
-	FVector Input = ActionValue.Get<FInputActionValue::Axis3D>();
+	const FVector Input = ActionValue.Get<FInputActionValue::Axis3D>();
 	AddMovementInput(GetActorRotation().RotateVector(Input), MoveScale);
 }
 
@@ -153,7 +153,6 @@ void ASpaceshipPlayerPawn::Rotate(const FInputActionValue& ActionValue)
 
 void ASpaceshipPlayerPawn::ToggleFreeFly()
 {
-	// TODO: make this recenter the camera to be above world view
 	bFreeFly = !bFreeFly;
 }
 
